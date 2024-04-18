@@ -1,2 +1,2 @@
 # HumbleHelper
-Productivity application. Get more done, save that backlog of ideas.
+Productivity application. Get more done, save that backlog of ideas. And more!
