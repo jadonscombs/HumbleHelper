@@ -68,7 +68,9 @@ class GitManager(commands.Cog):
 
         # don't update if too early
         if time() - self.last_update < update_interval:
-            print("too early, not updating")
+            print(
+                "[GitManager][_git_pull_and_restart] too early, not updating"
+            )
             return
         
         # 
@@ -85,8 +87,9 @@ class GitManager(commands.Cog):
         Automated method/task to update HumbleHelper code base.
         """
         print(
-            "[GitManager][git_auto_update()]: "
-            "Codebase update automatically triggered! (1min)",  
+            f"[GitManager][git_auto_update()]: "
+            f"Codebase update automatically triggered! "
+            f"({round(update_interval/60)}min)",  
         )
         await self._git_pull_and_restart()
 
