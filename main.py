@@ -28,8 +28,8 @@ def load_cogs(bot: discord.Bot):
     for cog in cog_list:
         try:
             bot.load_extension(cog)
-        except commands.ExceptionNotFound as err:
-            print(repr(err), file=sys.stderr)
+        except (discord.ExtensionNotFound, discord.NoEntryPointError) as err:
+            #print(repr(err), file=sys.stderr)
             continue
         except Exception as err:
             print(repr(err), file=sys.stderr)

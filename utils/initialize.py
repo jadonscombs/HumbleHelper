@@ -60,7 +60,6 @@ def fetch_all_cogs(cog_dirs: tuple = None) -> list | None:
             # remove leading "./" and trailing "/";
             # replace remaining "/" with "."
             cog_prefix = dir.rstrip("/").lstrip("./").replace("/", ".")
-            print(f"cog prefix: {cog_prefix}")
 
             # iterate over each file in the current directory
             for filename in os.listdir(dir):
@@ -73,5 +72,6 @@ def fetch_all_cogs(cog_dirs: tuple = None) -> list | None:
         except Exception as err:
             print(repr(err), file=sys.stderr)
 
-    print("returning cog list:\n{cog_list}")
+    cog_list_str = '\n'.join(cog_list)
+    print(f"returning cog list:\n{cog_list_str}")
     return cog_list
