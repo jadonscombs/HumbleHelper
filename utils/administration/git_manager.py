@@ -25,10 +25,35 @@ class GitManager(commands.Cog):
         # after startup
         self.humble_repo = f"{os.getcwd()}"
 
+        # used to determine if entire restart necessary for bot;
+        # if a git pull results in updated code, then self._git_pull(...)
+        # should update this field to True
+        self.repo_has_changed_flag : bool = False
+
     def cog_unload(self):
         print("[GitManager][cog_unload] cog unload called!")
         self.git_auto_update.cancel()
         super().cog_unload()
+
+    def repo_has_changed(self):
+        """
+        Internal helper method. Returns true if any of Humble Helper's code
+        has changed.
+        """
+        repo_path = self.humble_repo
+
+        repo = git.Repo(repo_path)
+        current = repo.head.commit
+
+        if current == repo.head.commit:
+            print("[GitManager][repo_has_changed] No code changes found!")
+            self.repo_has_changed_flag = False
+        else:
+            print(
+                "[GitManager][repo_has_changed] "
+                "Code updated! Restart required."
+            )
+            self.repo_has_changed_flag = True
 
     async def close(self):
         self.cog_unload()
@@ -73,14 +98,16 @@ class GitManager(commands.Cog):
             )
             return
         
-        # 
+        # --
         print()
         await self._git_pull()
-        await self._restart_bot()
+
+        # only restart if code was updated after a git pull
+        if self.repo_has_changed():
+            await self._restart_bot()
         self.last_update = time()
 
 
-    #@tasks.loop(hours=1)
     @tasks.loop(seconds=update_interval)
     async def git_auto_update(self):
         """
