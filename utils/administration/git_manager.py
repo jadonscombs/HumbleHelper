@@ -1,9 +1,11 @@
 import os
+from datetime import datetime
 from time import time
 from discord.ext import tasks, commands
 from discord import option
 import discord
 import git
+import pytz
 from utils.administration.shared_resources import _reboot_bot
 
 update_interval = 300 #seconds
@@ -142,6 +144,37 @@ class GitManager(commands.Cog):
         )
         await self._git_pull()
         #await self._git_pull_and_restart()
+
+
+    @git_slash.command(
+        name="pullstats",
+        #guild_ids=[]
+        description="Get codebase stats on HumbleHelper"
+    )
+    @commands.has_guild_permissions(administrator=True)
+    async def pull_stats(self, ctx):
+        """
+        Fetch codebase statistics on HumbleHelper
+        """
+        time_format = "%Y-%m-%d %H:%M:%S %Z%z"
+        time_zone = pytz.timezone('US/Central')
+
+        last_pull_cst = datetime.fromtimestamp(
+            self.last_pull,
+            tz=time_zone
+        )
+        last_update_cst = datetime.fromtimestamp(
+            self.last_update,
+            tz=time_zone
+        )
+        stats = (
+            f"```"
+            f"Last git pull was performed on {last_pull_cst}."
+            f"Last reboot (OR git_manager reload) was performed "
+            f"on {last_update_cst}."
+            f"Git pull update interval is: {round(update_interval/60)} min."
+            f"```"
+        )
 
 
 # register GitManager cog to the bot
