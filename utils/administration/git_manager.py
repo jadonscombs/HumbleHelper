@@ -191,6 +191,7 @@ class GitManager(commands.Cog):
         last_update_cst = datetime.fromtimestamp((self.last_update or 0))
         last_update_cst = last_update_cst.astimezone(
             time_zone).strftime(time_format)
+        
         stats = (
             f"```"
             f"Last git pull was performed "
