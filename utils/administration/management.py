@@ -39,7 +39,7 @@ class Management(commands.Cog):
         "force",
         description="(Optional) Force reboot. Use 'yes','y', or 'true'",
         required=False,
-        default="true"
+        default="false"
     )
     @commands.has_guild_permissions(administrator=True)
     async def reboot(self, ctx, force: str):
