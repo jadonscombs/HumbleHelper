@@ -20,6 +20,7 @@ class GitManager(commands.Cog):
         self.bot = bot
         self.git_auto_update.start()
         self.last_update = time()
+        self.last_pull = None
 
         # using 'os.get_cwd()' assumes application doesn't change directory
         # after startup
@@ -69,6 +70,10 @@ class GitManager(commands.Cog):
             repo = git.Repo(self.humble_repo)
             origin = repo.remote(name='origin')
             res = origin.pull(verbose=True)
+            
+            # update 'self.last_pull' timestamp
+            self.last_pull = time()
+
             #print(f"functions of pull[0]: {dir(res[0])}")
             #print(f"contents of pull[0]: {res[0]}")
 
