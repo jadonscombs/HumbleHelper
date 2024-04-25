@@ -3,10 +3,15 @@ from datetime import datetime
 from time import time
 from discord.ext import tasks, commands
 from discord import option
+from pathlib import Path
 import discord
 import git
 import pytz
-from utils.administration.shared_resources import _reboot_bot
+from utils.administration.shared_resources import (
+    _reboot_bot,
+    reboot_timestamp_dir,
+    reboot_timestamp_filename
+)
 
 update_interval = 300 #seconds
 
@@ -21,7 +26,7 @@ class GitManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.git_auto_update.start()
-        self.last_update = time()
+        self.last_update = (self._read_reboot_time() or time())
         self.last_pull = None
 
         # using 'os.get_cwd()' assumes application doesn't change directory
@@ -37,6 +42,27 @@ class GitManager(commands.Cog):
         print("[GitManager][cog_unload] cog unload called!")
         self.git_auto_update.cancel()
         super().cog_unload()
+
+    def _read_reboot_time(self):
+        """
+        Internal helper. If the file exists, read timestamp from reboot
+        timestamp file (should be in 'shared_resources.py').
+        """
+        timestamp = None
+        p = reboot_timestamp_dir / reboot_timestamp_filename
+
+        if Path.exists(p):
+            with (p).open('r') as reboot_timestamp:
+                try:
+                    # read the timestamp stored in the file,
+                    # then assign timestamp to self.last_update
+                    timestamp = reboot_timestamp.read_text()
+                except:
+                    pass
+
+        # delete the timestamp file (may change in future), and return value
+        p.unlink(missing_ok=True)
+        return timestamp
 
     def repo_has_changed(self):
         """
@@ -161,17 +187,19 @@ class GitManager(commands.Cog):
 
         last_pull_cst = datetime.fromtimestamp(
             (self.last_pull or 0),
+            format=time_format,
             tz=time_zone
         )
         last_update_cst = datetime.fromtimestamp(
             (self.last_update or 0),
+            format=time_format,
             tz=time_zone
         )
         stats = (
             f"```"
-            f"Last git pull was performed on {last_pull_cst}."
+            f"Last git pull was performed on {last_pull_cst}.\n"
             f"Last reboot (OR git_manager reload) was performed "
-            f"on {last_update_cst}."
+            f"on {last_update_cst}.\n"
             f"Git pull update interval is: {round(update_interval/60)} min."
             f"```"
         )

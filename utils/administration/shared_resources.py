@@ -1,14 +1,19 @@
 """
 Shared resources for management-related components.
 """
+from datetime import datetime
 import asyncio
 import os
 import signal
 import sys
 from discord.ext import commands
+from pathlib import Path
 import discord
-import platform
+import pytz
 
+reboot_timestamp_dir = Path('.') / 'data'
+reboot_timestamp_dir.mkdir(exist_ok=True)
+reboot_timestamp_filename = 'reboot_time.txt'
 
 async def _reboot_bot(bot: discord.Bot):
     """
@@ -16,8 +21,17 @@ async def _reboot_bot(bot: discord.Bot):
     Requires proper setup of script running in systemd.
     """
     try:
-        #print("[placeholder] rebooted!")
-        #return
+        # create a temporary file with current timestamp;
+        # this will be picked up by git_manager when bot restarts
+        reboot_time = datetime.now(
+            format="%Y-%m-%d %H:%M:%S %Z%z",
+            tz=pytz.timezone('US/Central')
+        )
+
+        with (
+            reboot_timestamp_dir / 'reboot_time.txt'
+        ).open('w') as opened_file:
+            opened_file.write(reboot_time)
 
         # NOTE:
         # this code block *does* kill the bot, but relies on systemd service
@@ -34,7 +48,6 @@ async def _reboot_bot(bot: discord.Bot):
         #
         # keeping this error for now to see if a fix for this issue
         # in pycord v2.5.0 will resolve the error
-
         await bot.close()
 
         # windows does not deal with "signals" like "SIGQUIT", so only do this
