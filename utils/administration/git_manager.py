@@ -176,6 +176,8 @@ class GitManager(commands.Cog):
             f"```"
         )
 
+        await ctx.respond(stats)
+
 
 # register GitManager cog to the bot
 def setup(bot):
