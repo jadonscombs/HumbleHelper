@@ -16,7 +16,7 @@ reboot_timestamp_dir = Path('.') / 'data'
 reboot_timestamp_dir.mkdir(exist_ok=True)
 reboot_timestamp_filename = 'reboot_time.txt'
 
-def _update_reboot_timestamp(reboot_time: datetime | time = None):
+def _update_reboot_timestamp(reboot_time = None):
     """
     Internal helper. Small function to update reboot time (writes to a
     temporary file). In the future, will consider migrating this functionality
