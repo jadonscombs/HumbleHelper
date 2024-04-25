@@ -160,11 +160,11 @@ class GitManager(commands.Cog):
         time_zone = pytz.timezone('US/Central')
 
         last_pull_cst = datetime.fromtimestamp(
-            self.last_pull,
+            (self.last_pull or 0),
             tz=time_zone
         )
         last_update_cst = datetime.fromtimestamp(
-            self.last_update,
+            (self.last_update or 0),
             tz=time_zone
         )
         stats = (
