@@ -26,10 +26,11 @@ def _update_reboot_timestamp(reboot_time: datetime | time = None):
 
     # if passed-in reboot time is type 'datetime.datetime'
     if isinstance(reboot_time, datetime):
-        reboot_time = datetime.astimezone(tz=time_zone)
+        reboot_time = reboot_time.astimezone(tz=time_zone)
     # if passed-in reboot time is type 'time.time'
     elif isinstance(reboot_time, time):
-        reboot_time = datetime.fromtimestamp(reboot_time, tz=time_zone)
+        reboot_time = datetime.fromtimestamp(
+            reboot_time).astimezone(time_zone)
     # if reboot time was not passed in, default to datetime.datetime.now()
     else:
         reboot_time = datetime.now(tz=time_zone)

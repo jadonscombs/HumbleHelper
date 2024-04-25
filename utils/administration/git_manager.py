@@ -184,16 +184,13 @@ class GitManager(commands.Cog):
         time_format = "%Y-%m-%d %H:%M:%S %Z%z"
         time_zone = pytz.timezone('US/Central')
 
-        last_pull_cst = datetime.fromtimestamp(
-            (self.last_pull or 0),
-            tz=time_zone
-        )
-        last_pull_cst = last_pull_cst.strftime(time_format)
-        last_update_cst = datetime.fromtimestamp(
-            (self.last_update or 0),
-            tz=time_zone
-        )
-        last_update_cst = last_update_cst.strftime(time_format)
+        last_pull_cst = datetime.fromtimestamp((self.last_pull or 0))
+        last_pull_cst = last_pull_cst.astimezone(
+            time_zone).strftime(time_format)
+
+        last_update_cst = datetime.fromtimestamp((self.last_update or 0))
+        last_update_cst = last_update_cst.astimezone(
+            time_zone).strftime(time_format)
         stats = (
             f"```"
             f"Last git pull was performed "
