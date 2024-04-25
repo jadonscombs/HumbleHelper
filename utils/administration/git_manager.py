@@ -10,16 +10,17 @@ import pytz
 from utils.administration.shared_resources import (
     _reboot_bot,
     reboot_timestamp_dir,
-    reboot_timestamp_filename
+    reboot_timestamp_filename,
+    _update_reboot_timestamp
 )
 
-update_interval = 300 #seconds
+_update_interval = 300 #seconds
 
 class GitManager(commands.Cog):
     """
     Git code management class/Cog. Focused on up-to-date code management.
     """
-    
+
     # define slash (/) command prefix name to use in discord channels
     git_slash = discord.SlashCommandGroup("git", "git management")
 
@@ -124,24 +125,22 @@ class GitManager(commands.Cog):
         """
         print("[GitManager][_git_pull_and_restart]: ...", end='')
 
-        # don't update if too early
-        if time() - self.last_update < update_interval:
+        # don't perform git pull OR restart, if too early
+        if time() - self.last_update < _update_interval:
             print(
                 "[GitManager][_git_pull_and_restart] too early, not updating"
             )
             return
-        
-        # --
-        print()
+
+        # perform the git pull
         await self._git_pull()
 
         # only restart if code was updated after a git pull
         if self.repo_has_changed():
             await self._restart_bot()
-        self.last_update = time()
 
 
-    @tasks.loop(seconds=update_interval)
+    @tasks.loop(seconds=_update_interval)
     async def git_auto_update(self):
         """
         Automated method/task to update HumbleHelper code base.
@@ -149,7 +148,7 @@ class GitManager(commands.Cog):
         print(
             f"[GitManager][git_auto_update()]: "
             f"Codebase update automatically triggered! "
-            f"({round(update_interval/60)}min)",  
+            f"({round(_update_interval/60)}min)",  
         )
         await self._git_pull_and_restart()
 
@@ -187,23 +186,23 @@ class GitManager(commands.Cog):
 
         last_pull_cst = datetime.fromtimestamp(
             (self.last_pull or 0),
-            format=time_format,
             tz=time_zone
         )
+        last_pull_cst = last_pull_cst.strftime(time_format)
         last_update_cst = datetime.fromtimestamp(
             (self.last_update or 0),
-            format=time_format,
             tz=time_zone
         )
+        last_update_cst = last_update_cst.strftime(time_format)
         stats = (
             f"```"
-            f"Last git pull was performed on {last_pull_cst}.\n"
-            f"Last reboot (OR git_manager reload) was performed "
+            f"Last git pull was performed "
+            f"on {last_pull_cst}.\n"
+            f"Last reboot was performed "
             f"on {last_update_cst}.\n"
-            f"Git pull update interval is: {round(update_interval/60)} min."
+            f"Git pull update interval is: {round(_update_interval/60)} min."
             f"```"
         )
-
         await ctx.respond(stats)
 
 

@@ -6,6 +6,7 @@ import asyncio
 import os
 import signal
 import sys
+from time import time
 from discord.ext import commands
 from pathlib import Path
 import discord
@@ -15,6 +16,32 @@ reboot_timestamp_dir = Path('.') / 'data'
 reboot_timestamp_dir.mkdir(exist_ok=True)
 reboot_timestamp_filename = 'reboot_time.txt'
 
+def _update_reboot_timestamp(reboot_time: datetime | time = None):
+    """
+    Internal helper. Small function to update reboot time (writes to a
+    temporary file). In the future, will consider migrating this functionality
+    to a database-involved or JSON solution.
+    """
+    time_zone = pytz.timezone('US/Central')
+
+    # if passed-in reboot time is type 'datetime.datetime'
+    if isinstance(reboot_time, datetime):
+        reboot_time = datetime.astimezone(tz=time_zone)
+    # if passed-in reboot time is type 'time.time'
+    elif isinstance(reboot_time, time):
+        reboot_time = datetime.fromtimestamp(reboot_time, tz=time_zone)
+    # if reboot time was not passed in, default to datetime.datetime.now()
+    else:
+        reboot_time = datetime.now(tz=time_zone)
+
+    with (
+        reboot_timestamp_dir / reboot_timestamp_filename
+    ).open('w') as opened_file:
+        # format the time, then write to file
+        time_format = "%Y-%m-%d %H:%M:%S %Z%z"
+        opened_file.write(reboot_time.strftime(time_format))
+
+
 async def _reboot_bot(bot: discord.Bot):
     """
     Internal helper. Reboots bot by sending termination signal to OS.
@@ -23,23 +50,8 @@ async def _reboot_bot(bot: discord.Bot):
     try:
         # create a temporary file with current timestamp;
         # this will be picked up by git_manager when bot restarts
-        reboot_time = datetime.now(
-            format="%Y-%m-%d %H:%M:%S %Z%z",
-            tz=pytz.timezone('US/Central')
-        )
+        _update_reboot_timestamp()
 
-        with (
-            reboot_timestamp_dir / 'reboot_time.txt'
-        ).open('w') as opened_file:
-            opened_file.write(reboot_time)
-
-        # NOTE:
-        # this code block *does* kill the bot, but relies on systemd service
-        # configuration to ensure the restart of the <main.py> script for
-        # this bot;
-        # also, self.bot.close() by itself causes same console error as
-        # including signal.signal(...) and os.kill(...);
-        #
         # NOTE:
         # signal.signal(signal.SIGQUIT, SIG_DFL) may not work on Windows!
         #
@@ -50,6 +62,13 @@ async def _reboot_bot(bot: discord.Bot):
         # in pycord v2.5.0 will resolve the error
         await bot.close()
 
+        # NOTE:
+        # this code block *does* kill the bot, but relies on systemd service
+        # configuration to ensure the restart of the <main.py> script for
+        # this bot;
+        # also, self.bot.close() by itself causes same console error as
+        # including signal.signal(...) and os.kill(...);
+        #
         # windows does not deal with "signals" like "SIGQUIT", so only do this
         # for linux (which is the intended OS for cloud hosting)
         if sys.platform.startswith('linux'):
@@ -57,8 +76,10 @@ async def _reboot_bot(bot: discord.Bot):
             os.kill(os.getpid(), signal.SIGQUIT)
 
     except Exception as e:
-        #raise commands.CommandError(f"[Management] Failed to manually reboot: {e}")
-        print(repr(e), file=sys.stderr)
+        #raise commands.CommandError(
+        #    f"[Management] Failed to manually reboot: {e}"
+        #)
+        print(f"[_reboot_bot] {repr(e)}", file=sys.stderr)
 
 
 class YesNoView(discord.ui.View):
