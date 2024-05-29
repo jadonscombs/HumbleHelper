@@ -1,0 +1,15 @@
+services:
+  bot:
+    build:
+      context: .
+      args:
+        BOT_TOKEN: ${BOT_TOKEN}
+    env_file:
+      - .env
+    restart: always
+    container_name: humble_helper
+    volumes:
+      - app_data:/data
+
+volumes:
+  app_data:
